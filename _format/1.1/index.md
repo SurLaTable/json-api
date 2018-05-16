@@ -245,6 +245,7 @@ objects.
 
 Relationships may be to-one or to-many.
 
+<a id="document-resource-object-relationships-relationship-object"></a>
 A "relationship object" **MUST** contain at least one of the following:
 
 * `links`: a [links object][links] containing at least one of the following:
@@ -261,7 +262,9 @@ A "relationship object" **MUST** contain at least one of the following:
   relationship.
 
 A relationship object that represents a to-many relationship **MAY** also contain
-[pagination] links under the `links` member, as described below.
+[pagination] links under the `links` member, as described below. Any
+[pagination] links in a relationship object **MUST** paginate the relationship
+data, not the related resources.
 
 > Note: See [fields] and [member names] for more restrictions on this container.
 
@@ -509,7 +512,8 @@ Each member of a links object is a "link". A link **MUST** be represented as
 either:
 
 * a string containing the link's URL.
-* an object ("link object") which can contain the following members:
+* <a id="document-links-link-object"></a>an object ("link object") which can
+  contain the following members:
   * `href`: a string containing the link's URL.
   * `meta`: a meta object containing non-standard meta-information about the
     link.
@@ -553,7 +557,7 @@ value is a [meta] object that contains non-standard meta-information.
 ```json
 {
   "jsonapi": {
-    "version": "1.0"
+    "version": "1.1"
   }
 }
 ```
@@ -941,8 +945,10 @@ client to customize which related resources should be returned.
 If an endpoint does not support the `include` parameter, it **MUST** respond
 with `400 Bad Request` to any requests that include it.
 
-If an endpoint supports the `include` parameter and a client supplies it,
-the server **MUST NOT** include unrequested [resource objects] in the `included`
+If an endpoint supports the `include` parameter and a client supplies it:
+
+ - The server's response **MUST** be a [compound document] with an `included` key — even if that `included` key holds an empty array (because the requested relationships are empty).
+ - The server **MUST NOT** include unrequested [resource objects] in the `included`
 section of the [compound document].
 
 The value of the `include` parameter **MUST** be a comma-separated (U+002C
@@ -1191,7 +1197,7 @@ Accept: application/vnd.api+json
 
 If a relationship is provided in the `relationships` member of the
 [resource object][resource objects], its value **MUST** be a relationship object with a `data`
-member. The value of this key represents the linkage the new resource is to
+member. The value of this key represents the [linkage][resource linkage] the new resource is to
 have.
 
 #### <a href="#crud-creating-client-ids" id="crud-creating-client-ids" class="headerlink"></a> Client-Generated IDs
@@ -1761,11 +1767,12 @@ responses, in accordance with
 
 ## <a href="#query-parameters" id="query-parameters" class="headerlink"></a> Query Parameters
 
-Implementation specific query parameters **MUST** adhere to the same constraints
-as [member names] with the additional requirement that they **MUST** contain at
-least one non a-z character (U+0061 to U+007A). It is **RECOMMENDED** that a
-U+002D HYPHEN-MINUS, "-", U+005F LOW LINE, "_", or capital letter is used
-(e.g. camelCasing).
+Implementation specific query parameter names **MUST** adhere to the same
+constraints as [member names], with the additional requirement that they
+**MUST** contain at least one non a-z character (i.e., outside U+0061 to U+007A).
+
+It is **RECOMMENDED** that a U+002D HYPHEN-MINUS ("-"), U+005F LOW LINE ("_"),
+or capital letter (e.g. camelCasing) be used to satisfy the above requirement.
 
 If a server encounters a query parameter that does not follow the naming
 conventions above, and the server does not know how to process it as a query
@@ -1811,8 +1818,10 @@ An error object **MAY** have the following members:
 * `source`: an object containing references to the source of the error,
   optionally including any of the following members:
   * `pointer`: a JSON Pointer [[RFC6901](https://tools.ietf.org/html/rfc6901)]
-    to the associated entity in the request document [e.g. `"/data"` for a
-    primary data object, or `"/data/attributes/title"` for a specific attribute].
+    to the value in the request document that caused the error [e.g. `"/data"`
+    for a primary data object, or `"/data/attributes/title"` for a specific
+    attribute]. This **MUST** point to a value in the request document that
+    exists; if it doesn't, the client **SHOULD** simply ignore the pointer.
   * `parameter`: a string indicating which URI query parameter caused
     the error.
 * `meta`: a [meta object][meta] containing non-standard meta-information about the

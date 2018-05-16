@@ -245,6 +245,7 @@ objects.
 
 Relationships may be to-one or to-many.
 
+<a id="document-resource-object-relationships-relationship-object"></a>
 A "relationship object" **MUST** contain at least one of the following:
 
 * `links`: a [links object][links] containing at least one of the following:
@@ -261,7 +262,9 @@ A "relationship object" **MUST** contain at least one of the following:
   relationship.
 
 A relationship object that represents a to-many relationship **MAY** also contain
-[pagination] links under the `links` member, as described below.
+[pagination] links under the `links` member, as described below. Any
+[pagination] links in a relationship object **MUST** paginate the relationship
+data, not the related resources.
 
 > Note: See [fields] and [member names] for more restrictions on this container.
 
@@ -509,7 +512,8 @@ Each member of a links object is a "link". A link **MUST** be represented as
 either:
 
 * a string containing the link's URL.
-* an object ("link object") which can contain the following members:
+* <a id="document-links-link-object"></a>an object ("link object") which can
+  contain the following members:
   * `href`: a string containing the link's URL.
   * `meta`: a meta object containing non-standard meta-information about the
     link.
@@ -1171,7 +1175,7 @@ Accept: application/vnd.api+json
 
 If a relationship is provided in the `relationships` member of the
 [resource object][resource objects], its value **MUST** be a relationship object with a `data`
-member. The value of this key represents the linkage the new resource is to
+member. The value of this key represents the [linkage][resource linkage] the new resource is to
 have.
 
 #### <a href="#crud-creating-client-ids" id="crud-creating-client-ids" class="headerlink"></a> Client-Generated IDs
